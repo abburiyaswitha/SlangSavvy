@@ -1,12 +1,28 @@
-def get_slang_response(user_input):
-    slang_dict = {
-        "bet": "Bet means 'okay' or 'deal'. It's used to confirm something.",
-        "sus": "Sus is short for 'suspicious', often used when something seems shady.",
-        "cap": "Cap means a lie. Saying 'no cap' means you're telling the truth.",
-        "bruh": "Bruh is a casual way of saying 'bro' or 'dude'.",
-        "goat": "GOAT stands for 'Greatest Of All Time', used for top athletes and legends.",
-        "lit": "Lit means something is exciting, fun, or amazing!",
-        "swag":"Swag refers to having a cool , confident and stylish attitude"
-    }
+import requests
+API_KEY = "AIzaSyA4NLwbVVLb-vEKsT9k8OAgDJh--4KQqX4"
 
-    return slang_dict.get(user_input.lower(), "Sorry, I don't know that slang yet!")
+def slang_chatbot(user_message):
+    """Send a message to Google Gemini AI for slang interpretation."""
+    api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key={API_KEY}"
+    
+    payload = {
+        "contents": [
+            {"parts": [{"text": user_message}]}
+        ]
+    }
+    
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(api_url, json=payload, headers=headers)
+        if response.status_code == 200:
+            response_data = response.json()
+            return response_data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "I couldn't understand that slang.")
+        else:
+            return f"Error: {response.status_code} - {response.text}"
+    except Exception as e:
+        return f"Chatbot Error: {str(e)}"
+if __name__ == "__main__":
+    user_input = input("Enter slang: ")
+    response = slang_chatbot(user_input)
+    print("AI Response:", response)
