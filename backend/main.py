@@ -1,26 +1,33 @@
 from fastapi import FastAPI
-
+from fastapi.middleware.cors import CORSMiddleware
+from slang_api import get_slang_meaning
+from chatbot_api import slang_chatbot
+from trending_api import get_trending_slang
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Change to specific frontend URL in production
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+@app.get("/")
+def home():
+    return {"message": "Welcome to SlangSavvy Backend!"}
 
-# Dictionary of slang words and their meanings
-slang_dict = {
-    "bet": "Bet means 'okay' or 'deal'. It's used to confirm something.",
-    "sus": "Sus is short for 'suspicious', often used when something seems shady.",
-    "cap": "Cap means a lie. Saying 'no cap' means you're telling the truth.",
-    "bruh": "Bruh is a casual way of saying 'bro' or 'dude'.",
-    "goat": "GOAT stands for 'Greatest Of All Time', used for top athletes and legends.",
-    "lit": "Lit means something is exciting, fun, or amazing!"
-}
+@app.get("/decode")
+def decode_slang(word: str):
+    """Fetch meaning of a slang word."""
+    meaning = get_slang_meaning(word)
+    return {"word": word, "meaning": meaning}
 
-@app.get("/chat/{user_input}")
-def chat_response(user_input: str):
-    # Convert input to lowercase to match dictionary keys
-    user_input = user_input.lower()
-
-    # Check if slang exists in the dictionary
-    if user_input in slang_dict:
-        response = slang_dict[user_input]
-    else:
-        response = "Sorry, I don't know that slang yet!"
-
+@app.get("/chat")
+def chat_slang(message: str):
+    """AI chatbot to explain slang terms."""
+    response = slang_chatbot(message)
     return {"response": response}
+
+@app.get("/trending")
+def trending_slang():
+    """Fetch trending slang terms."""
+    return {"trending": get_trending_slang()}
