@@ -3,39 +3,48 @@ import sys
 import os
 import requests
 
-# Fixing incorrect __file__ usage
+# Add backend folder to Python path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend")))
 
-from slang_api import get_slang_meaning # type: ignore
-from trending_api import get_trending_slang # type: ignore
+# Import other backend functions
+from slang_api import get_slang_meaning
+from trending_api import get_trending_slang
 
-# Function to handle chatbot responses
+# Function to call Chatbot API
 def slang_chatbot(user_input):
-    slang_dict = {
-        "sus": "Sus is short for 'suspicious', often used when something seems shady.","cap": "Cap means a lie. Saying 'no cap' means you're telling the truth.","bruh": "Bruh is a casual way of saying 'bro' or 'dude'.","goat": "GOAT stands for 'Greatest Of All Time', used for top athletes and legends.","lit": "Lit means something is exciting, fun, or amazing!","give me some trending words" : "Rizz,Delulu,Mid,Slay,No Cap,Bet,Skibidi,Gyatt,NPC,GOAT,FOMO,Flex,Yeet","give me few trending words" : "Rizz,Delulu,Mid,Slay,No Cap,Bet,Skibidi,Gyatt,NPC,GOAT,FOMO,Flex,Yeet","what is skibidi with meaning and example" : "A viral phrase from TikTok memes. - Bro, why are you always saying skibidi?","no cap" : "No lie, telling the truth. - That burger was the best I have ever had, no cap!","delulu" : "Short for delusional - Used when someone believes something unlikely. - She thinks she is dating a celebrity? That is so delulu!","rizz" : "Short for charisma refers to someone's flirting skills. - He is got mad rizz with the ladies.","slay" : "To do something amazingly well. - She slayed that outfit today!","mid" : "Something average or overrated. - That movie was mid, nothing special."
-    }
+    url = f"http://127.0.0.1:8000/chat/{user_input}"  # Backend API URL
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json().get("response", "No response available.")
+        else:
+            return "Error: Unable to fetch response from chatbot."
+    except requests.exceptions.ConnectionError:
+        return "Error: Chatbot API is not running. Please start the backend server."
 
-    return slang_dict.get(user_input.lower(), "Sorry, I don't know that slang yet!")
-
-
-# Streamlit UI
+# Streamlit App Title
 st.title("SlangSavvy - AI Slang Decoder")
+
+# Navigation Sidebar
 menu = ["Home", "Slang Decoder", "Chatbot", "Trending Slang"]
 choice = st.sidebar.selectbox("Menu", menu)
 
+# Home Page
 if choice == "Home":
-    st.write("Welcome to *SlangSavvy*! Decode, chat, and explore trending slang.")
+    st.write("Welcome to SlangSavvy! Decode, chat, and explore trending slang.")
 
+# Slang Decoder Page
 elif choice == "Slang Decoder":
     st.subheader("Decode Slang Words")
     slang_input = st.text_input("Enter a slang word:")
     if st.button("Get Meaning"):
         if slang_input:
             meaning = get_slang_meaning(slang_input)
-            st.write(f"**{slang_input}:** {meaning}")  # Fix incorrect formatting
+            st.write(f"{slang_input}:** {meaning}")
         else:
             st.warning("Please enter a slang word.")
 
+# Chatbot Page
 elif choice == "Chatbot":
     st.subheader("AI Slang Chatbot")
     user_input = st.text_input("Chat with AI:")
@@ -46,6 +55,7 @@ elif choice == "Chatbot":
         else:
             st.warning("Please enter a message.")
 
+# Trending Slang Page
 elif choice == "Trending Slang":
     st.subheader("Trending Slang Words")
     trending = get_trending_slang()
